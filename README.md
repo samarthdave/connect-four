@@ -1,7 +1,7 @@
 # Connect :four:
 ## implemented in Java :coffee:
 
-#### Usage
+### Usage
 ```
 javac CFGMain.java
   # which should automatically compile (in that order?):
@@ -12,6 +12,10 @@ javac CFGMain.java
 # run the program
 java CFGMain
 ```
+
+#### Work in Progress
+- Integrating a ConnectFourGame I found online
+- or I can extract the logic from ConnectFourFrame
 
 My goals for this project
 - refactor for clarity and structure

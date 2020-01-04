@@ -4,32 +4,31 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 // we are going to create a simple 2-players Connect Four implementation in Java 8
-public class ConnectFour {
+public class ConnectFourGame {
 
-  // we define characters for players (R for Red, Y for Yellow)
-  private static final char[] PLAYERS = {'R', 'Y'};
-  // dimensions for our board
-  private final int width, height;
+  // we define players (R - Red, Y - Yellow)
+  public static final char[] PLAYERS = {'R', 'Y'};
+  public static final char EMPTY = '.', RED = 'R', YELLOW = 'Y'; // just in case
+   // dimensions (default)
+  public static final int WIDTH = 7, HEIGHT = 6, MAX_MOVES = WIDTH * HEIGHT;
+  
   // grid for the board
   private final char[][] grid;
-  // we store last move made by a player
-  private int lastCol = -1, lastTop = -1;
+  private int lastCol = -1, lastTop = -1; // store last move made by a player
 
-  public ConnectFour(int w, int h) {
-    width = w;
-    height = h;
-    grid = new char[h][];
+  public ConnectFourGame(int numPlayers) {
+    grid = new char[HEIGHT][];
 
     // init the grid will blank cell
-    for (int i = 0; i < h; i++) {
-      Arrays.fill(grid[i] = new char[w], '.');
+    for (int i = 0; i < HEIGHT; i++) {
+      Arrays.fill(grid[i] = new char[WIDTH], '.');
     }
   }
 
   // we use Streams to make a more concise method 
   // for representing the board
   public String toString() {
-    return IntStream.range(0,  width).
+    return IntStream.range(0,  WIDTH).
            mapToObj(Integer::toString).
            collect(Collectors.joining()) + 
            "\n" +
@@ -47,9 +46,9 @@ public class ConnectFour {
   // get string representation fo the col containing 
   // the last play of the user
   public String vertical() {
-    StringBuilder sb = new StringBuilder(height);
+    StringBuilder sb = new StringBuilder(HEIGHT);
 
-    for (int h = 0; h < height; h++) {
+    for (int h = 0; h < HEIGHT; h++) {
       sb.append(grid[h][lastCol]);
     }
 
@@ -59,12 +58,12 @@ public class ConnectFour {
   // get string representation of the "/" diagonal 
   // containing the last play of the user
   public String slashDiagonal() {
-    StringBuilder sb = new StringBuilder(height);
+    StringBuilder sb = new StringBuilder(HEIGHT);
 
-    for (int h = 0; h < height; h++) {
+    for (int h = 0; h < HEIGHT; h++) {
       int w = lastCol + lastTop - h;
 
-      if (0 <= w && w < width) {
+      if (0 <= w && w < WIDTH) {
         sb.append(grid[h][w]);
       }
     }
@@ -75,12 +74,12 @@ public class ConnectFour {
   // get string representation of the "\" 
   // diagonal containing the last play of the user
   public String backslashDiagonal() {
-    StringBuilder sb = new StringBuilder(height);
+    StringBuilder sb = new StringBuilder(HEIGHT);
 
-    for (int h = 0; h < height; h++) {
+    for (int h = 0; h < HEIGHT; h++) {
       int w = lastCol - lastTop + h;
 
-      if (0 <= w && w < width) {
+      if (0 <= w && w < WIDTH) {
         sb.append(grid[h][w]);
       }
     }
@@ -119,14 +118,14 @@ public class ConnectFour {
       int col = input.nextInt();
 
       // check if column is ok
-      if (!(0 <= col && col < width)) {
-        System.out.println("Column must be between 0 and " + (width - 1));
+      if (!(0 <= col && col < WIDTH)) {
+        System.out.println("Column must be between 0 and " + (WIDTH - 1));
         continue;
       }
 
       // now we can place the symbol to the first 
       // available row in the asked column
-      for (int h = height - 1; h >= 0; h--) {
+      for (int h = HEIGHT - 1; h >= 0; h--) {
         if (grid[h][col] == '.') {
           grid[lastTop = h][lastCol = col] = symbol;
           return;
@@ -139,43 +138,52 @@ public class ConnectFour {
   }
 
   public static void main(String[] args) {
-    // we assemble all the pieces of the puzzle for 
-    // building our Connect Four Game
-    try (Scanner input = new Scanner(System.in)) {
-      // we define some variables for our game like 
-      // dimensions and nb max of moves
-      int height = 6; int width = 8; int moves = height * width;
+    System.out.println("Connect Four Game by Samarth Dave");
+		
+    // no need to calculate
+    // int moves = ConnectFourGame.HEIGHT * ConnectFourGame.WIDTH;
+		
+    int numPlayers = 1;
+		new ConnectFourFrame(numPlayers);
 
-      // we create the ConnectFour instance
-      ConnectFour board = new ConnectFour(width, height);
+    // we create the board instance
+    ConnectFourGame board = new ConnectFourGame(1);
 
-      // we explain users how to enter their choices
-      System.out.println("Use 0-" + (width - 1) + " to choose a column");
-      // we display initial board
-      System.out.println(board);
+    // we explain users how to enter their choices
+    System.out.println("Use 0-" + (ConnectFourGame.WIDTH - 1) + " to choose a column");
+    // we display initial board
+    System.out.println(board);
 
-      // we iterate until max nb moves be reached
-      // simple trick to change player turn at each iteration
-      for (int player = 0; moves-- > 0; player = 1 - player) {
-        // symbol for current player
-        char symbol = PLAYERS[player];
+    // a simpler solution that iterates turns
+    boolean isRedTurn = true;
+    boolean isWinner = false;
 
-        // we ask user to choose a column
-        board.chooseAndDrop(symbol, input);
+    while (true) {
+      int loc = (isRedTurn ? 0 : 1);
+      char symbol = PLAYERS[loc];
 
-        // we display the board
-        System.out.println(board);
+      // no scanner yet...
+      // board.chooseAndDrop(symbol, input);
 
-        // we need to check if a player won. If not, 
-        // we continue, otherwise, we display a message
-        if (board.isWinningPlay()) {
-          System.out.println("\nPlayer " + symbol + " wins!");
-          return;
-        }
+      // update the java swing board (using repaint)
+      // repaint()
+      // System.out.println(board); // and reprint the board for debugging
+
+      // board already checks for wins (panel will call this function)
+      if (board.isWinningPlay()) {
+        System.out.println("\nPlayer " + symbol + " wins!");
+        isWinner = true;
+        break;
       }
-    
+
+      // alternate turn
+      isRedTurn = !isRedTurn;
+    }
+
+    if (!isWinner) {
       System.out.println("Game over. No winner. Try again!");
     }
+
   }
 
 }
