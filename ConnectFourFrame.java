@@ -124,41 +124,36 @@ class ConnectFourFrame extends JFrame {
 	
 	// "smart" computer
 	public static int computer() {
-		int[][] copiedBoard = copyBoard();
+		// int[][] copiedBoard = copyBoard();
 		
-		int bestMoveLoc = 0;
-		int bestScore = -500;
+		// int bestMoveLoc = 0;
+		// int bestScore = -500;
 		
-		for (int c = 0; c < 7; c++) {
-			if (dropPiece(copiedBoard, c, BLACK)) {
-				int score = minimax(copiedBoard, 0, false);
-				undoMove(copiedBoard, c);
-				if (score > bestScore) {
-					bestScore = score;
-					bestMoveLoc = c;
-				}
-			}
-		}
+		// for (int c = 0; c < 7; c++) {
+		// 	if (dropPiece(copiedBoard, c, BLACK)) {
+		// 		int score = minimax(copiedBoard, 0, false);
+		// 		undoMove(copiedBoard, c);
+		// 		if (score > bestScore) {
+		// 			bestScore = score;
+		// 			bestMoveLoc = c;
+		// 		}
+		// 	}
+		// }
 		
 		// play the location
-		dropPiece(ConnectFourFrame.board, bestMoveLoc, BLACK);
-		return bestMoveLoc;
+		// dropPiece(ConnectFourFrame.board, bestMoveLoc, BLACK);
+		// return bestMoveLoc;
 		
 //		return 1;
 		
-//		int rand = 0;
-//		do {
-//			if(status() == DRAW)
-//				break;
-//			rand = (int)(Math.floor(Math.random()*7));
-//		} while(!dropPiece(ConnectFourFrame.board, rand, BLACK));
-//		
-//		if(status() == DRAW)
-//			return -1;
-//		else
-//			return rand;
-//		dropPiece(ConnectFourFrame.board, 1, BLACK);
-//		return 1;
+		int rand = 0;
+		do {
+			if(status() == DRAW)
+				break;
+			rand = (int)(Math.floor(Math.random()*7));
+		} while(!dropPiece(ConnectFourFrame.board, rand, BLACK));
+
+		return 1;
 	}
 	
 	public static int status() {

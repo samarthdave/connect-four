@@ -8,13 +8,15 @@ import javax.swing.JPanel;
 import java.awt.Dimension;
 import java.awt.Insets;
 import javax.swing.JFrame;
-public class CFGMainSamarth {
+
+public class CFGMain {
 	public static void main(String[] args) {
-		Scanner s = new Scanner(System.in);
 		System.out.println("Connect Four Game by Samarth Dave");
-//		int amount = validInt(s,"How many players (1-2)? ",1,2);
-		int amount = 1;
+		
+		Scanner s = new Scanner(System.in);
+		int amount = validInt(s,"How many players (1-2)? ",1,2);
 		s.close();
+		
 		new ConnectFourFrame(amount);
 	}
 	public static int validInt(Scanner s, String t, int min, int max) {
