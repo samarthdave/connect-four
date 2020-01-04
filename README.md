@@ -1,5 +1,17 @@
 # Connect :four:
-#### implemented in Java
+## implemented in Java :coffee:
+
+#### Usage
+```
+javac CFGMain.java
+  # which should automatically compile (in that order?):
+  # - CFGMain
+  # - ConnectFourFrame
+  # - ConnectFourPanel
+
+# run the program
+java CFGMain
+```
 
 My goals for this project
 - refactor for clarity and structure
