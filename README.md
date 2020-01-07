@@ -51,3 +51,4 @@ My goals for this project
 
 - create a Connect4 "AI" using minimax algorithm
   - and not random like I am atm
+  - Update: alpha-beta pruning seems too complicated to implement at the moment...

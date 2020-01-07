@@ -37,10 +37,10 @@ public class ConnectFourGame {
     }
 
     public boolean dropPiece(int c, int piece) {
-        return this.dropPiece(board, c, piece);
+        return ConnectFourGame.dropPiece(board, c, piece);
     }
 
-    private boolean dropPiece(int[][] b, int c, int piece) {
+    private static boolean dropPiece(int[][] b, int c, int piece) {
         if (c < 0 || c > COLUMNS - 1) {
             return false;
         }
@@ -53,7 +53,7 @@ public class ConnectFourGame {
         return false;
     }
 
-    public boolean undoDrop(int[][] b, int c) {
+    public static boolean undoDrop(int[][] b, int c) {
         for (int r = (ROWS - 1); r >= 0; r--) {
             if (b[r][c] != EMPTY) {
                 b[r][c] = EMPTY;
@@ -97,7 +97,11 @@ public class ConnectFourGame {
     // don't understand this code? I guess that makes 2 of us
     // I didn't comment a couple of years back... whoops
     public int status() {
-        int[][] b = board;
+        return ConnectFourGame.status(board);
+    }
+
+    // static version of status for minimax algorithm
+    private static int status(int[][] b) {
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c <= 3; c++) {
                 if (b[r][c] == RED && b[r][c + 1] == RED &&
@@ -168,6 +172,85 @@ public class ConnectFourGame {
         sb.append("-----------------------------\n");
 
         return sb.toString();
+    }
+
+    // -----------------------------------------
+    // my attempt at using the minimax algorithm
+    // -----------------------------------------
+
+    // scores for minimax algo.
+    private static final int RED_WIN_SCORE = 10,
+                BLACK_WIN_SCORE = -10,
+                TIE_SCORE = 0;
+
+    // next 2 methods implement a smarter computer
+    // (At the moment, a very useless computer since I haven't implemented alpha-beta pruning.)
+    private static int minimax(int[][] b, int depth, boolean isMaximizing) {
+        switch (status(b)) {
+            case DRAW:
+                return TIE_SCORE;
+            case RED_WINS:
+                return RED_WIN_SCORE;
+            case BLACK_WINS:
+                return BLACK_WIN_SCORE;
+            default:
+                // do nothing
+        }
+
+        // vanilla minimax doesn't work w/ a game like Connect4
+        // eventually, I hope to use alpha-beta pruning
+        // but for now, these 3 lines prevent your computer from exploding...
+        if (depth == 4) {
+            return 0;
+        }
+
+        // assuming computer is BLACK and second player
+        // I should generalize this method but will retain for now
+        int current = isMaximizing ? BLACK : RED; // current player
+
+        if (isMaximizing) {
+            int bestScore = -1000;
+            for (int c = 0; c < COLUMNS; c++) {
+                    // Is the spot available?
+                if (dropPiece(b, c, current)) {
+                    int score = minimax(b, depth + 1, false);
+                    undoDrop(b, c);
+                    bestScore = Math.max(score, bestScore);
+                }
+            }
+            return bestScore;
+        } else {
+            int bestScore = 1000;
+            for (int c = 0; c < COLUMNS; c++) {
+                if (dropPiece(b, c, current)) { // use opponent/human here
+                    int score = minimax(b, depth + 1, true);
+                    undoDrop(b, c);
+                    bestScore = Math.min(score, bestScore);
+                }
+            }
+            return bestScore;
+        }
+    }
+
+    // scores the moves and plays the "best" one from above method
+    public int minimaxComputer(int player) {
+        int[][] clone = cloneBoard();
+        int bestScore = -1000;
+        int move = -1;
+
+        for (int c = 0; c < COLUMNS; c++) {
+            if (dropPiece(clone, c, player)) {
+                int score = minimax(clone, 0, false);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    move = c;
+                }
+            }
+        }
+        
+        dropPiece(move, player);
+        return move;
     }
 
 }
