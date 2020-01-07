@@ -18,6 +18,31 @@ java CFGMain
 - ~~Integrating a ConnectFourGame I [found online](https://medium.com/@ssaurel/creating-a-connect-four-game-in-java-f45356f1d6ba)~~
 - or I can extract the logic from my existing Frame code
 
+#### [How to use Makefiles with Java](https://www.cs.swarthmore.edu/~newhall/unixhelp/javamakefiles.html)
+- Recursive Dependency checking
+- Missing separator error?
+  - *Note* use tabs not spaces or else make [will throw an error](https://stackoverflow.com/questions/16931770/makefile4-missing-separator-stop)
+```
+JFLAGS = -g
+JC = javac
+.SUFFIXES: .java .class
+.java.class:
+        $(JC) $(JFLAGS) $*.java
+
+CLASSES = \
+        Foo.java \
+        Blah.java \
+        Library.java \
+        Main.java 
+
+default: classes
+
+classes: $(CLASSES:.java=.class)
+
+clean:
+        $(RM) *.class
+```
+
 My goals for this project
 - refactor for clarity and structure
   - as it is, a "ConnectFourFrame" controls the state of the game

@@ -37,12 +37,12 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 			}
 		}
 
-		for (int r = 5; r >= 0; r--) {
-			for (int c = 6; c >= 0; c--) {
-				if (game.board[r][c] == black) {
+		for (int r = ConnectFourGame.ROWS - 1; r >= 0; r--) {
+			for (int c = ConnectFourGame.COLUMNS - 1; c >= 0; c--) {
+				if (game.board[r][c] == ConnectFourGame.BLACK) {
 					g.setColor(Color.BLACK);
 					g.fillOval((c * SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
-				} else if (game.board[r][c] == red) {
+				} else if (game.board[r][c] == ConnectFourGame.RED) {
 					g.setColor(Color.RED);
 					g.fillOval((c*SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
 				}
@@ -51,9 +51,9 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 
 		// text
 		g.setColor(Color.BLUE);
-		g.setFont(new Font("Arial",Font.PLAIN,10));
-		g.drawString("CFG by Samarth Dave",5,15);
-		g.setFont(new Font("Arial",Font.PLAIN,30));
+		g.setFont(new Font("Arial", Font.PLAIN, 10));
+		g.drawString("CFG by Samarth Dave", 5, 15);
+		g.setFont(new Font("Arial", Font.PLAIN, 25));
 		g.drawString(gameState, 30, 50);
 	}
 
@@ -66,63 +66,52 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 		if (e.getButton() == MouseEvent.BUTTON3) {
 			if (game.restart()) {
 				gameState = "";
+				current = game.isRedTurn ? ConnectFourGame.RED : ConnectFourGame.BLACK;
+				repaint();
+				return;
 			}
 		}
 
-		// if not a left click
+		// if any other mouse button then ignore
 		if (e.getButton() != MouseEvent.BUTTON1) {
 			return;
 		}
 
-		// remaining code for left click...
+		// -----------------------------------
+		// left click code
+		// -----------------------------------
 
-		if (game.isSingle) {
-			if (game.status() != ConnectFourGame.PLAYING)
-				return;
-			
-			// generate intervals...
-			int[] columnIntervals = new int[ConnectFourGame.COLUMNS + 2];
+		if (game.status() != ConnectFourGame.PLAYING)
+			return;
 
-			for (int i = 0; i < ConnectFourGame.COLUMNS + 2; i++) {
-				columnIntervals[i] = SQUARE_LENGTH * i;
-				// check if x value is below
-				if (x <= columnIntervals[i]) {
-					if (!game.dropPiece(i - 1, red)) {
-						return;
-					}
+		// generate intervals...
+		int[] columnIntervals = new int[ConnectFourGame.COLUMNS + 2];
+
+		for (int i = 0; i < ConnectFourGame.COLUMNS + 2; i++) {
+			// [0, 72, 216, ... 504]
+			columnIntervals[i] = SQUARE_LENGTH * i;
+			// check if x value is below
+			if (x <= columnIntervals[i]) {
+				if (!game.dropPiece(i - 1, current)) {
+					return;
 				}
+				break;
 			}
+		}
 
-			// run the computer
-			game.computer();
+		// alternate player or run computer
 
+		if (game.isSinglePlayer) {
+			game.computer(ConnectFourGame.BLACK);
 		} else {
-			// if human vs. human
-			if (game.status() != ConnectFourGame.PLAYING)
-				return;
-
-			if (game.isRedTurn)
-				current = red;
-			else
-				current = black;
-			
-			// generate intervals...
-			int[] columnIntervals = new int[ConnectFourGame.COLUMNS + 2];
-
-			for (int i = 0; i < ConnectFourGame.COLUMNS + 2; i++) {
-				columnIntervals[i] = SQUARE_LENGTH * i;
-				// check if x value is below
-				if (x <= columnIntervals[i]) {
-					if (!game.dropPiece(i - 1, red)) {
-						return; // can't drop here
-					}
-				}
-			}
-
+			// if human vs. human then alternate turn
 			game.alternateTurn();
-			
-		} // end else block
 
+			current = game.isRedTurn ? ConnectFourGame.RED : ConnectFourGame.BLACK;
+		}
+
+
+		// update status string & repaint
 		if (game.status() != p && gameState.equals("")) {
 			switch (game.status()) {
 				case bw:
@@ -136,7 +125,7 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 					break;
 			}
 		}
-	
+
 		repaint();
 	} // end mouse click
 
