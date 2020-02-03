@@ -4,13 +4,23 @@
 
 ### Usage
 ```
+##############
+### step 1 ### - build from source
+##############
+# run "make" - the inbuilt (usually preinstalled) dependency checker
+make
+
+# or build with "javac"
 javac CFGMain.java
   # which should automatically compile (in that order?):
   # - CFGMain
   # - ConnectFourFrame
   # - ConnectFourPanel
 
-# run the program
+##############
+### step 2 ### - run the program
+##############
+
 java CFGMain
 ```
 
