@@ -1,8 +1,3 @@
-import java.util.Arrays;
-import java.util.Scanner;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
 // we are going to create a simple 2-players Connect Four implementation in Java 8
 public class ConnectFourGame {
     public static int[][] board;
@@ -179,13 +174,15 @@ public class ConnectFourGame {
     // -----------------------------------------
 
     // scores for minimax algo.
-    private static final int RED_WIN_SCORE = 10,
-                BLACK_WIN_SCORE = -10,
-                TIE_SCORE = 0;
+    private static final int POS_INF         = Integer.MAX_VALUE;
+    private static final int NEG_INF         = Integer.MIN_VALUE;
+    private static final int RED_WIN_SCORE   =  1000;
+    private static final int BLACK_WIN_SCORE = -1000;
+    private static final int TIE_SCORE       = 0;
 
     // next 2 methods implement a smarter computer
     // (At the moment, a very useless computer since I haven't implemented alpha-beta pruning.)
-    private static int minimax(int[][] b, int depth, boolean isMaximizing) {
+    private static int minimax(int[][] b, int depth, int alpha, int beta, boolean isMaximizing) {
         switch (status(b)) {
             case DRAW:
                 return TIE_SCORE;
@@ -197,60 +194,52 @@ public class ConnectFourGame {
                 // do nothing
         }
 
-        // vanilla minimax doesn't work w/ a game like Connect4
-        // eventually, I hope to use alpha-beta pruning
-        // but for now, these 3 lines prevent your computer from exploding...
-        if (depth == 4) {
-            return 0;
+        if (depth == 0) {
+            System.out.println("depth is 0...");
+            return BLACK_WIN_SCORE;
         }
 
-        // assuming computer is BLACK and second player
-        // I should generalize this method but will retain for now
-        int current = isMaximizing ? BLACK : RED; // current player
-
+        int value = 0;
+        int piece = isMaximizing ? RED : BLACK;
         if (isMaximizing) {
-            int bestScore = -1000;
-            for (int c = 0; c < COLUMNS; c++) {
-                    // Is the spot available?
-                if (dropPiece(b, c, current)) {
-                    int score = minimax(b, depth + 1, false);
-                    undoDrop(b, c);
-                    bestScore = Math.max(score, bestScore);
-                }
+            value = NEG_INF;
+            for (int i = 0; i < COLUMNS; i++) {
+                // drop & undo
+                dropPiece(b, i, piece);
+                value = Math.max(value, minimax(b, depth - 1, alpha, beta, false));
+                undoDrop(b, i); // so we don't need to make a copy of the board
+                // get max (since we're maximizing)
+                alpha = Math.max(alpha, value);
+                // snip snip?
+                if (alpha >= beta) { break; }
             }
-            return bestScore;
+            return value;
         } else {
-            int bestScore = 1000;
-            for (int c = 0; c < COLUMNS; c++) {
-                if (dropPiece(b, c, current)) { // use opponent/human here
-                    int score = minimax(b, depth + 1, true);
-                    undoDrop(b, c);
-                    bestScore = Math.min(score, bestScore);
-                }
+            // minimizing player (black in this case)
+            value = POS_INF;
+            for (int i = 0; i < COLUMNS; i++) {
+                // drop & undo
+                dropPiece(b, i, piece);
+                value = Math.min(value, minimax(b, depth - 1, alpha, beta, true));
+                undoDrop(b, i);
+                // get minimum values
+                beta = Math.min(beta, value);
+                // snip snip?
+                if (alpha >= beta) { break; }
             }
-            return bestScore;
+            return value;
         }
+
     }
 
     // scores the moves and plays the "best" one from above method
     public int minimaxComputer(int player) {
-        int[][] clone = cloneBoard();
-        int bestScore = -1000;
-        int move = -1;
+        String playerString = (player == ConnectFourGame.BLACK) ? "BLACK" : "RED";
+        System.out.println("PLAYING FOR " + playerString);
 
-        for (int c = 0; c < COLUMNS; c++) {
-            if (dropPiece(clone, c, player)) {
-                int score = minimax(clone, 0, false);
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    move = c;
-                }
-            }
-        }
-        
-        dropPiece(move, player);
-        return move;
+        int d = 3;
+        boolean isMax = player == RED; // true if red, false if black
+        return minimax(board, d, NEG_INF, POS_INF, isMax);
     }
 
 }

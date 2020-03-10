@@ -7,9 +7,7 @@ import java.awt.event.MouseListener;
 import javax.swing.JPanel;
 
 class ConnectFourPanel extends JPanel implements MouseListener {
-	static final int red = 1, black = 2, emp = 0;
-	static final int d = 3, rw = 4, bw = 5, p = 6;
-	static int current = red;
+	static int current = ConnectFourGame.RED;
 	public String gameState = "";
 
 	// dimensions
@@ -100,7 +98,6 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 		}
 
 		// alternate player or run computer
-
 		if (game.isSinglePlayer) {
 			game.computer(ConnectFourGame.BLACK);
 		} else {
@@ -110,17 +107,16 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 			current = game.isRedTurn ? ConnectFourGame.RED : ConnectFourGame.BLACK;
 		}
 
-
 		// update status string & repaint
-		if (game.status() != p && gameState.equals("")) {
+		if (game.status() != ConnectFourGame.PLAYING && gameState.equals("")) {
 			switch (game.status()) {
-				case bw:
+				case ConnectFourGame.BLACK_WINS:
 					gameState = "Black wins! Right click to restart";
 					break;
-				case rw:
+				case ConnectFourGame.RED_WINS:
 					gameState = "Red wins! Right click to restart";
 					break;
-				case d:
+				case ConnectFourGame.DRAW:
 					gameState ="Draw! Right click to restart";
 					break;
 			}
