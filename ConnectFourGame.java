@@ -1,57 +1,94 @@
 // we are going to create a simple 2-players Connect Four implementation in Java 8
 public class ConnectFourGame {
-    public static int[][] board;
+    // each game gets it's own board
+    private char[][] board;
     // player codes
-    public static final int EMPTY = 0, RED = 1, BLACK = 2;
+    public static final char EMPTY = ' ', RED = 'R', YELLOW = 'Y';
     // game status
-    public static final int DRAW = 3, RED_WINS = 4, BLACK_WINS = 5, PLAYING = 6;
+    public static final int DRAW = 3, RED_WINS = 4, YELLOW_WINS = 5, PLAYING = 6;
     // dimensions
     public static final int COLUMNS = 7, ROWS = 6, MAX_MOVES = COLUMNS * ROWS;
 
-    public int numPlayers;
-    boolean isRedTurn, isSinglePlayer;
+    // keep state of game
+    private char current; // current is who should play NEXT
+    private boolean isRedTurn;
+    public boolean isSinglePlayer;
 
-    public ConnectFourGame(int numPlayers) {
-        this.numPlayers = numPlayers;
-        this.isSinglePlayer = numPlayers == 1;
+    public ConnectFourGame(int players) {
+        // red goes first by convention
+        // (or b/c abstracting this logic is too difficult)
         this.isRedTurn = true;
+        this.current = 'R';
+        // if only one player
+        this.isSinglePlayer = players == 1;
+
         // grid is initialized to 0 or EMPTY
-        board = new int[ROWS][COLUMNS];
-        for (int r = 0; r < ROWS; r++)
-            for (int c = 0; c < COLUMNS; c++)
-                board[r][c] = EMPTY;
+        board = new char[ROWS][COLUMNS];
+        ConnectFourGame.cleanBoard(board);
+    }
+
+    // get value @ index & column
+    public char get(int r, int c) {
+        return ConnectFourGame.get(this, r, c);
+    }
+
+    private static char get(ConnectFourGame g, int r, int c) {
+        if (r < 0 || r > ROWS - 1) {
+            return ' ';
+        }
+        if (c < 0 || c > COLUMNS - 1) {
+            return ' ';
+        }
+        return g.board[r][c];
     }
 
     // copy board
-    public int[][] cloneBoard() {
-        int[][] boardCopy = new int[ROWS][COLUMNS]; // 7x6 board
+    public char[][] cloneBoard() {
+        char[][] boardCopy = new char[ROWS][COLUMNS]; // 7x6 board
         for (int r = 0; r < ROWS; r++)
             for (int c = 0; c < COLUMNS; c++)
                 boardCopy[r][c] = this.board[r][c];
         return boardCopy;
     }
 
-    public boolean dropPiece(int c, int piece) {
-        return ConnectFourGame.dropPiece(board, c, piece);
+    // all implementations of drop piece are static
+    public boolean dropPiece(int col) {
+        boolean result = ConnectFourGame.dropPiece(this.board, col, this.current);
+        if (result) {
+            // only if the drop actually suceeds do you switch turn
+            this.alternateTurn();
+        }
+        // manually change the turn here
+        return result;
     }
 
-    private static boolean dropPiece(int[][] b, int c, int piece) {
-        if (c < 0 || c > COLUMNS - 1) {
+    // more abstraction that comes as a necessity, not as clean
+    // but code that I'm somewhat proud of ... :/
+    private static boolean dropPiece(char[][] b, int col, char current) {
+        // check for valid location
+        if (col < 0 || col > COLUMNS - 1) {
             return false;
         }
+        // if there's any space, return true
         for (int r = (ROWS - 1); r >= 0; r--) {
-            if (b[r][c] == EMPTY) {
-                b[r][c] = piece;
+            if (b[r][col] == EMPTY) {
+                b[r][col] = current;
+                // g.alternateTurn();
                 return true;
             }
         }
+        // else, no space in the column; return false
         return false;
     }
 
-    public static boolean undoDrop(int[][] b, int c) {
+    // undo the most recent drop (static)
+    public static boolean undoDrop(ConnectFourGame g, int c) {
+        // start from the top of the row (highest point)
         for (int r = (ROWS - 1); r >= 0; r--) {
-            if (b[r][c] != EMPTY) {
-                b[r][c] = EMPTY;
+            // once you hit the topmost non-empty space
+            if (g.board[r][c] != EMPTY) {
+                g.board[r][c] = EMPTY;
+                g.alternateTurn();
                 return true;
             }
         }
@@ -59,52 +96,61 @@ public class ConnectFourGame {
     }
 
     // RESTART - clears the board
+    // similar to constructor
     public boolean restart() {
-        if (status() == PLAYING)
+        if (ConnectFourGame.status(this) == PLAYING)
             return false;
         // clear the board & reset state
-        isRedTurn = true;
-        for (int r = 0; r < ROWS; r++)
-            for (int c = 0; c < COLUMNS; c++)
-                board[r][c] = EMPTY;
+        this.isRedTurn = true;
+        this.current = 'R';
+        // set all values to empty
+        ConnectFourGame.cleanBoard(this.board);
         return true;
     }
 
     public void alternateTurn() {
-        isRedTurn = !isRedTurn;
+        this.isRedTurn = !this.isRedTurn;
+        this.current = (this.current == RED ? YELLOW : RED);
     }
 
-    // "smart" computer
-    public int computer(int player) {
+    // utility function (static)
+    private static void cleanBoard(char[][] b) {
+        for (int r = 0; r < ROWS; r++)
+            for (int c = 0; c < COLUMNS; c++)
+                b[r][c] = EMPTY;
+    }
+
+    // "smart" computer - really just random
+    public static int computer(ConnectFourGame g) {
         // random computer
         int rand = 0;
         do {
-            if (status() == DRAW)
+            if (g.status() == DRAW)
                 break;
             rand = (int)(Math.floor(Math.random() * COLUMNS));
-        } while (!dropPiece(rand, player));
+        } while (!g.dropPiece(rand));
 
-        if (status() == DRAW)
+        if (ConnectFourGame.status(g) == DRAW)
             return -1;
         return rand;
     }
 
-    // don't understand this code? I guess that makes 2 of us
-    // I didn't comment a couple of years back... whoops
-    public int status() {
-        return ConnectFourGame.status(board);
-    }
 
+    // static version is used
+    public int status() {
+        return ConnectFourGame.status(this);
+    }
     // static version of status for minimax algorithm
-    private static int status(int[][] b) {
+    private static int status(ConnectFourGame g) {
+        char[][] b = g.board;
         for (int r = 0; r < ROWS; r++) {
             for (int c = 0; c <= 3; c++) {
                 if (b[r][c] == RED && b[r][c + 1] == RED &&
                     b[r][c + 2] == RED && b[r][c + 3] == RED)
                     return RED_WINS;
-                else if (b[r][c] == BLACK && b[r][c + 1] == BLACK &&
-                    b[r][c + 2] == BLACK && b[r][c + 3] == BLACK)
-                    return BLACK_WINS;
+                else if (b[r][c] == YELLOW && b[r][c + 1] == YELLOW &&
+                    b[r][c + 2] == YELLOW && b[r][c + 3] == YELLOW)
+                    return YELLOW_WINS;
             }
         }
         // vertical
@@ -113,9 +159,9 @@ public class ConnectFourGame {
                 if (b[r][c] == RED && b[r + 1][c] == RED &&
                     b[r + 2][c] == RED && b[r + 3][c] == RED)
                     return RED_WINS;
-                else if (b[r][c] == BLACK && b[r + 1][c] == BLACK &&
-                    b[r + 2][c] == BLACK && b[r + 3][c] == BLACK)
-                    return BLACK_WINS;
+                else if (b[r][c] == YELLOW && b[r + 1][c] == YELLOW &&
+                    b[r + 2][c] == YELLOW && b[r + 3][c] == YELLOW)
+                    return YELLOW_WINS;
             }
         }
         for (int r = 0; r <= 2; r++) {
@@ -123,9 +169,9 @@ public class ConnectFourGame {
                 if (b[r][c] == RED && b[r + 1][c - 1] == RED &&
                     b[r + 2][c - 2] == RED && b[r + 3][c - 3] == RED)
                     return RED_WINS;
-                else if (b[r][c] == BLACK && b[r + 1][c - 1] == BLACK &&
-                    b[r + 2][c - 2] == BLACK && b[r + 3][c - 3] == BLACK)
-                    return BLACK_WINS;
+                else if (b[r][c] == YELLOW && b[r + 1][c - 1] == YELLOW &&
+                    b[r + 2][c - 2] == YELLOW && b[r + 3][c - 3] == YELLOW)
+                    return YELLOW_WINS;
             }
         }
         for (int r = 0; r <= 2; r++) {
@@ -133,9 +179,9 @@ public class ConnectFourGame {
                 if (b[r][c] == RED && b[r + 1][c + 1] == RED &&
                     b[r + 2][c + 2] == RED && b[r + 3][c + 3] == RED)
                     return RED_WINS;
-                else if (b[r][c] == BLACK && b[r + 1][c + 1] == BLACK &&
-                    b[r + 2][c + 2] == BLACK && b[r + 3][c + 3] == BLACK)
-                    return BLACK_WINS;
+                else if (b[r][c] == YELLOW && b[r + 1][c + 1] == YELLOW &&
+                    b[r + 2][c + 2] == YELLOW && b[r + 3][c + 3] == YELLOW)
+                    return YELLOW_WINS;
             }
         }
         for (int r = 0; r < 6; r++) {
@@ -151,95 +197,22 @@ public class ConnectFourGame {
     public String toString() {
         StringBuilder sb = new StringBuilder();
         for (int r = 0; r < ROWS; r++) {
-            sb.append("|");
+            sb.append('|');
             for (int c = 0; c < COLUMNS; c++) {
-                sb.append(" ");
-                if (board[r][c] == EMPTY)
-                    sb.append(" ");
-                else if (board[r][c] == RED)
-                    sb.append("R");
+                sb.append(EMPTY);
+                if (this.board[r][c] == EMPTY)
+                    sb.append(EMPTY);
+                else if (this.board[r][c] == RED)
+                    sb.append(RED);
                 else
-                    sb.append("B");
+                    sb.append(YELLOW);
                 sb.append(" |");
             }
-            sb.append("\n");
+            sb.append('\n');
         }
         sb.append("-----------------------------\n");
 
         return sb.toString();
-    }
-
-    // -----------------------------------------
-    // my attempt at using the minimax algorithm
-    // -----------------------------------------
-
-    // scores for minimax algo.
-    private static final int POS_INF         = Integer.MAX_VALUE;
-    private static final int NEG_INF         = Integer.MIN_VALUE;
-    private static final int RED_WIN_SCORE   =  1000;
-    private static final int BLACK_WIN_SCORE = -1000;
-    private static final int TIE_SCORE       = 0;
-
-    // next 2 methods implement a smarter computer
-    // (At the moment, a very useless computer since I haven't implemented alpha-beta pruning.)
-    private static int minimax(int[][] b, int depth, int alpha, int beta, boolean isMaximizing) {
-        switch (status(b)) {
-            case DRAW:
-                return TIE_SCORE;
-            case RED_WINS:
-                return RED_WIN_SCORE;
-            case BLACK_WINS:
-                return BLACK_WIN_SCORE;
-            default:
-                // do nothing
-        }
-
-        if (depth == 0) {
-            System.out.println("depth is 0...");
-            return BLACK_WIN_SCORE;
-        }
-
-        int value = 0;
-        int piece = isMaximizing ? RED : BLACK;
-        if (isMaximizing) {
-            value = NEG_INF;
-            for (int i = 0; i < COLUMNS; i++) {
-                // drop & undo
-                dropPiece(b, i, piece);
-                value = Math.max(value, minimax(b, depth - 1, alpha, beta, false));
-                undoDrop(b, i); // so we don't need to make a copy of the board
-                // get max (since we're maximizing)
-                alpha = Math.max(alpha, value);
-                // snip snip?
-                if (alpha >= beta) { break; }
-            }
-            return value;
-        } else {
-            // minimizing player (black in this case)
-            value = POS_INF;
-            for (int i = 0; i < COLUMNS; i++) {
-                // drop & undo
-                dropPiece(b, i, piece);
-                value = Math.min(value, minimax(b, depth - 1, alpha, beta, true));
-                undoDrop(b, i);
-                // get minimum values
-                beta = Math.min(beta, value);
-                // snip snip?
-                if (alpha >= beta) { break; }
-            }
-            return value;
-        }
-
-    }
-
-    // scores the moves and plays the "best" one from above method
-    public int minimaxComputer(int player) {
-        String playerString = (player == ConnectFourGame.BLACK) ? "BLACK" : "RED";
-        System.out.println("PLAYING FOR " + playerString);
-
-        int d = 3;
-        boolean isMax = player == RED; // true if red, false if black
-        return minimax(board, d, NEG_INF, POS_INF, isMax);
     }
 
 }

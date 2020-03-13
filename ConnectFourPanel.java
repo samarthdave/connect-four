@@ -7,8 +7,9 @@ import java.awt.event.MouseListener;
 import javax.swing.JPanel;
 
 class ConnectFourPanel extends JPanel implements MouseListener {
-	static int current = ConnectFourGame.RED;
-	public String gameState = "";
+	private static final long serialVersionUID = 1L; // annoying warnings
+
+	private String gameState = "";
 
 	// dimensions
 	private static int SQUARE_LENGTH = ConnectFourFrame.SQUARE_LENGTH;
@@ -17,8 +18,8 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 
 	private ConnectFourGame game;
 
-	public ConnectFourPanel(int players, ConnectFourGame cfg) {
-		this.game = cfg;
+	public ConnectFourPanel(int players) {
+		this.game = new ConnectFourGame(players);
 		setSize(PANEL_WIDTH, PANEL_HEIGHT);
 		addMouseListener(this);
 	}
@@ -37,10 +38,10 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 
 		for (int r = ConnectFourGame.ROWS - 1; r >= 0; r--) {
 			for (int c = ConnectFourGame.COLUMNS - 1; c >= 0; c--) {
-				if (game.board[r][c] == ConnectFourGame.BLACK) {
-					g.setColor(Color.BLACK);
+				if (game.get(r, c) == ConnectFourGame.YELLOW) {
+					g.setColor(Color.YELLOW);
 					g.fillOval((c * SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
-				} else if (game.board[r][c] == ConnectFourGame.RED) {
+				} else if (game.get(r, c) == ConnectFourGame.RED) {
 					g.setColor(Color.RED);
 					g.fillOval((c*SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
 				}
@@ -64,7 +65,6 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 		if (e.getButton() == MouseEvent.BUTTON3) {
 			if (game.restart()) {
 				gameState = "";
-				current = game.isRedTurn ? ConnectFourGame.RED : ConnectFourGame.BLACK;
 				repaint();
 				return;
 			}
@@ -90,7 +90,7 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 			columnIntervals[i] = SQUARE_LENGTH * i;
 			// check if x value is below
 			if (x <= columnIntervals[i]) {
-				if (!game.dropPiece(i - 1, current)) {
+				if (!game.dropPiece(i - 1)) {
 					return;
 				}
 				break;
@@ -99,19 +99,14 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 
 		// alternate player or run computer
 		if (game.isSinglePlayer) {
-			game.computer(ConnectFourGame.BLACK);
-		} else {
-			// if human vs. human then alternate turn
-			game.alternateTurn();
-
-			current = game.isRedTurn ? ConnectFourGame.RED : ConnectFourGame.BLACK;
+			ConnectFourGame.computer(game);
 		}
 
 		// update status string & repaint
 		if (game.status() != ConnectFourGame.PLAYING && gameState.equals("")) {
 			switch (game.status()) {
-				case ConnectFourGame.BLACK_WINS:
-					gameState = "Black wins! Right click to restart";
+				case ConnectFourGame.YELLOW_WINS:
+					gameState = "Yellow wins! Right click to restart";
 					break;
 				case ConnectFourGame.RED_WINS:
 					gameState = "Red wins! Right click to restart";
@@ -126,15 +121,11 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 	} // end mouse click
 
 	@Override
-	public void mousePressed(MouseEvent e) {
-	}
+	public void mousePressed(MouseEvent e) {}
 	@Override
-	public void mouseReleased(MouseEvent e) {
-	}
+	public void mouseReleased(MouseEvent e) {}
 	@Override
-	public void mouseEntered(MouseEvent e) {
-	}
+	public void mouseEntered(MouseEvent e) {}
 	@Override
-	public void mouseExited(MouseEvent e) {
-	}
+	public void mouseExited(MouseEvent e) {}
 }
