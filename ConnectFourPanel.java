@@ -8,14 +8,25 @@ import javax.swing.JPanel;
 
 class ConnectFourPanel extends JPanel implements MouseListener {
 	private static final long serialVersionUID = 1L; // annoying warnings
-
+	// for the panel to output the string
 	private String gameState = "";
 
 	// dimensions
 	private static int SQUARE_LENGTH = ConnectFourFrame.SQUARE_LENGTH;
 	private static int PANEL_WIDTH = SQUARE_LENGTH * ConnectFourGame.COLUMNS;
 	private static int PANEL_HEIGHT = SQUARE_LENGTH * ConnectFourGame.ROWS;
+	// save the colors for semantics
+	Color backgroundColor = new Color(0, 153, 255);
+	Color textColor       = Color.BLACK;
+	Color emptyCircle     = Color.GRAY;
+	// notice I'm saving the player colors. It seems useless
+	// until you consider letting "yellow" start first (usually red is the first player).
+	// Just change the graphics color output and technically the first player is yellow
+	// even though the game logic is storing 'R' in that spot
+	Color redColor        = new Color(255, 50, 50);
+	Color yellowColor     = new Color(255, 255, 50);
 
+	// the game class is held by the panel (not Frame like previously)
 	private ConnectFourGame game;
 
 	public ConnectFourPanel(int players) {
@@ -27,33 +38,42 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 	@Override
 	public void paint(Graphics g) {
 		super.paint(g);
-		setBackground(new Color(180,180,0));
-		g.setColor(Color.GRAY);
+		setBackground(backgroundColor);
+		g.setColor(emptyCircle);
 
+		// draw all empty circles
 		for (int i = 0; i < PANEL_WIDTH; i += SQUARE_LENGTH) {
 			for (int q = 0; q < PANEL_HEIGHT; q += SQUARE_LENGTH) {
 				g.fillOval(i + 6, q + 6, 60, 60);
 			}
 		}
 
+		// paint the circles
 		for (int r = ConnectFourGame.ROWS - 1; r >= 0; r--) {
 			for (int c = ConnectFourGame.COLUMNS - 1; c >= 0; c--) {
-				if (game.get(r, c) == ConnectFourGame.YELLOW) {
-					g.setColor(Color.YELLOW);
-					g.fillOval((c * SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
-				} else if (game.get(r, c) == ConnectFourGame.RED) {
-					g.setColor(Color.RED);
-					g.fillOval((c*SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
+				switch (game.get(r, c)) {
+					case ConnectFourGame.YELLOW:
+						g.setColor(yellowColor);
+						g.fillOval((c * SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
+						break;
+					case ConnectFourGame.RED:
+						g.setColor(redColor);
+						g.fillOval((c*SQUARE_LENGTH)+6, (r*SQUARE_LENGTH)+6, 60, 60);
+						break;
 				}
 			}
 		}
 
 		// text
-		g.setColor(Color.BLUE);
-		g.setFont(new Font("Arial", Font.PLAIN, 10));
-		g.drawString("CFG by Samarth Dave", 5, 15);
-		g.setFont(new Font("Arial", Font.PLAIN, 25));
-		g.drawString(gameState, 30, 50);
+		g.setColor(textColor);
+		g.setFont(new Font("Arial", Font.BOLD, 20));
+		g.drawString("CFG by Samarth Dave", 5, 20);
+		// draw remaining spots
+		String spotsLeft = (ConnectFourGame.MAX_MOVES - game.getDropCount()) + " spots left";
+		g.drawString(spotsLeft, 300, 20);
+		// draw game status if not ""
+		g.setFont(new Font("Arial", Font.BOLD, 25));
+		g.drawString(gameState, 30, 70);
 	}
 
 	// mouse events
