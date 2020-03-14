@@ -2,7 +2,11 @@
 public class ConnectFourGame {
     // each game gets it's own board
     private char[][] board;
+    // recent drop locations & count
+    private int dropCount;
     // player codes
+    // NOTE: 'R' = 82 & ' ' = 32 & 'Y' = 89
+    // becomes more relevant when checking for wins...
     public static final char EMPTY = ' ', RED = 'R', YELLOW = 'Y';
     // game status
     public static final int DRAW = 3, RED_WINS = 4, YELLOW_WINS = 5, PLAYING = 6;
@@ -15,23 +19,47 @@ public class ConnectFourGame {
     public boolean isSinglePlayer;
 
     public ConnectFourGame(int players) {
-        // red goes first by convention
-        // (or b/c abstracting this logic is too difficult)
-        this.isRedTurn = true;
-        this.current = 'R';
-        // if only one player
-        this.isSinglePlayer = players == 1;
-
         // grid is initialized to 0 or EMPTY
         board = new char[ROWS][COLUMNS];
+        this.isSinglePlayer = players == 1;
         ConnectFourGame.cleanBoard(board);
+        // set all values to defaults
+        this.dropCount = 0;
+        ConnectFourGame.resetValues(this);
     }
 
+    // ======================================
+    // UTILITY methods for use by constructor
+    // and reset
+    // ======================================
+    private static void resetValues(ConnectFourGame g) {
+        // red goes first by convention
+        // (or b/c abstracting this logic is too difficult)
+        
+        // clear the board & reset state
+        g.isRedTurn = true;
+        g.current = 'R';
+        // sets drops to 0
+        g.dropCount = 0;
+    }
+
+    // RESTART - clears the board
+    // similar to constructor
+    public boolean restart() {
+        if (ConnectFourGame.status(this) == PLAYING)
+            return false;
+        ConnectFourGame.resetValues(this);
+        // set all values to empty
+        ConnectFourGame.cleanBoard(this.board);
+        return true;
+    }
+    // ======================================
+
+    // ======================================
     // get value @ index & column
     public char get(int r, int c) {
         return ConnectFourGame.get(this, r, c);
     }
-
     private static char get(ConnectFourGame g, int r, int c) {
         if (r < 0 || r > ROWS - 1) {
             return ' ';
@@ -41,6 +69,7 @@ public class ConnectFourGame {
         }
         return g.board[r][c];
     }
+    // ======================================
 
     // copy board
     public char[][] cloneBoard() {
@@ -55,6 +84,7 @@ public class ConnectFourGame {
     public boolean dropPiece(int col) {
         boolean result = ConnectFourGame.dropPiece(this.board, col, this.current);
         if (result) {
+            this.dropCount += 1;
             // only if the drop actually suceeds do you switch turn
             this.alternateTurn();
         }
@@ -62,8 +92,7 @@ public class ConnectFourGame {
         return result;
     }
 
-    // more abstraction that comes as a necessity, not as clean
-    // but code that I'm somewhat proud of ... :/
+    // the static version is the utility function that does the work
     private static boolean dropPiece(char[][] b, int col, char current) {
         // check for valid location
         if (col < 0 || col > COLUMNS - 1) {
@@ -73,7 +102,6 @@ public class ConnectFourGame {
         for (int r = (ROWS - 1); r >= 0; r--) {
             if (b[r][col] == EMPTY) {
                 b[r][col] = current;
-                // g.alternateTurn();
                 return true;
             }
         }
@@ -95,20 +123,7 @@ public class ConnectFourGame {
         return false;
     }
 
-    // RESTART - clears the board
-    // similar to constructor
-    public boolean restart() {
-        if (ConnectFourGame.status(this) == PLAYING)
-            return false;
-        // clear the board & reset state
-        this.isRedTurn = true;
-        this.current = 'R';
-        // set all values to empty
-        ConnectFourGame.cleanBoard(this.board);
-        return true;
-    }
-
-    public void alternateTurn() {
+    private void alternateTurn() {
         this.isRedTurn = !this.isRedTurn;
         this.current = (this.current == RED ? YELLOW : RED);
     }
@@ -135,7 +150,6 @@ public class ConnectFourGame {
         return rand;
     }
 
-
     // static version is used
     public int status() {
         return ConnectFourGame.status(this);
@@ -143,52 +157,43 @@ public class ConnectFourGame {
     // static version of status for minimax algorithm
     private static int status(ConnectFourGame g) {
         char[][] b = g.board;
+
+        // check horizontal
         for (int r = 0; r < ROWS; r++) {
-            for (int c = 0; c <= 3; c++) {
-                if (b[r][c] == RED && b[r][c + 1] == RED &&
-                    b[r][c + 2] == RED && b[r][c + 3] == RED)
-                    return RED_WINS;
-                else if (b[r][c] == YELLOW && b[r][c + 1] == YELLOW &&
-                    b[r][c + 2] == YELLOW && b[r][c + 3] == YELLOW)
-                    return YELLOW_WINS;
+            for (int c = 0; c < COLUMNS - 4; c++) {
+                int sum = b[r][c] + b[r][c+1] + b[r][c+2] + b[r][c+3];
+                if (sum == RED * 4) { return RED_WINS; }
+                if (sum == YELLOW * 4) { return YELLOW_WINS; }
             }
         }
+
         // vertical
-        for (int r = 0; r <= 2; r++) {
-            for (int c = 0; c < COLUMNS; c++) {
-                if (b[r][c] == RED && b[r + 1][c] == RED &&
-                    b[r + 2][c] == RED && b[r + 3][c] == RED)
-                    return RED_WINS;
-                else if (b[r][c] == YELLOW && b[r + 1][c] == YELLOW &&
-                    b[r + 2][c] == YELLOW && b[r + 3][c] == YELLOW)
-                    return YELLOW_WINS;
+        for (int c = 0; c < COLUMNS; c++) {
+            for (int r = 0; r <= ROWS - 4; r++) {
+                int sum = b[r][c] + b[r+1][c] + b[r+2][c] + b[r+3][c];
+                if (sum == RED * 4) { return RED_WINS; }
+                if (sum == YELLOW * 4) { return YELLOW_WINS; }
             }
         }
-        for (int r = 0; r <= 2; r++) {
+        // backslash diagonal
+        for (int r = 0; r <= ROWS - 4; r++) {
             for (int c = 3; c < COLUMNS; c++) {
-                if (b[r][c] == RED && b[r + 1][c - 1] == RED &&
-                    b[r + 2][c - 2] == RED && b[r + 3][c - 3] == RED)
-                    return RED_WINS;
-                else if (b[r][c] == YELLOW && b[r + 1][c - 1] == YELLOW &&
-                    b[r + 2][c - 2] == YELLOW && b[r + 3][c - 3] == YELLOW)
-                    return YELLOW_WINS;
+                int sum = b[r][c] + b[r+1][c-1] + b[r+2][c-2] + b[r+3][c-3];
+                if (sum == RED * 4) { return RED_WINS; }
+                if (sum == YELLOW * 4) { return YELLOW_WINS; }
             }
         }
-        for (int r = 0; r <= 2; r++) {
-            for (int c = 0; c <= 3; c++) {
-                if (b[r][c] == RED && b[r + 1][c + 1] == RED &&
-                    b[r + 2][c + 2] == RED && b[r + 3][c + 3] == RED)
-                    return RED_WINS;
-                else if (b[r][c] == YELLOW && b[r + 1][c + 1] == YELLOW &&
-                    b[r + 2][c + 2] == YELLOW && b[r + 3][c + 3] == YELLOW)
-                    return YELLOW_WINS;
+        // regular diagonal (forward slash)
+        for (int r = 0; r <= ROWS - 4; r++) {
+            for (int c = 0; c <= COLUMNS - 4; c++) {
+                int sum = b[r][c] + b[r+1][c+1] + b[r+2][c+2] + b[r+3][c+3];
+                if (sum == RED * 4) { return RED_WINS; }
+                if (sum == YELLOW * 4) { return YELLOW_WINS; }
             }
         }
-        for (int r = 0; r < 6; r++) {
-            for (int c = 0; c < 7; c++) {
-                if (b[r][c] == EMPTY)
-                    return PLAYING;
-            }
+
+        if (g.dropCount < MAX_MOVES) {
+            return PLAYING;
         }
         return DRAW;
     }
@@ -213,6 +218,11 @@ public class ConnectFourGame {
         sb.append("-----------------------------\n");
 
         return sb.toString();
+    }
+
+    // get drop count
+    public int getDropCount() {
+        return this.dropCount;
     }
 
 }

@@ -99,9 +99,10 @@ class ConnectFourPanel extends JPanel implements MouseListener {
 
 		// alternate player or run computer
 		if (game.isSinglePlayer) {
+			// calling computer drops the piece & switches the turn
 			ConnectFourGame.computer(game);
 		}
-
+	
 		// update status string & repaint
 		if (game.status() != ConnectFourGame.PLAYING && gameState.equals("")) {
 			switch (game.status()) {
