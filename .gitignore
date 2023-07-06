@@ -1,2 +1,3 @@
 # java compiled files
 *.class
+bin/*.class
