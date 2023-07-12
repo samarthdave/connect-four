@@ -4,10 +4,7 @@
 // https://youtu.be/I64-UTORVfU
 // https://editor.p5js.org/codingtrain/sketches/0zyUhZdJD
 
-function computerMove() {}
-
 function bestMove() {
-    // AI to make its turn
     let bestScore = -Infinity;
     let move;
     for (let i = 0; i < 3; i++) {
@@ -15,7 +12,7 @@ function bestMove() {
             // Is the spot available?
             if (board[i][j] == "") {
                 board[i][j] = ai;
-                let score = minimax(board, 0, false);
+                let score = minimax(board, 10, false);
                 board[i][j] = "";
                 if (score > bestScore) {
                     bestScore = score;
@@ -29,44 +26,65 @@ function bestMove() {
 }
 
 let scores = {
-    X: 10,
-    O: -10,
+    X: 1,
+    O: -1,
     tie: 0,
 };
 
 function minimax(board, depth, isMaximizing) {
-    let result = checkWinner();
-    if (result !== null) {
-        return scores[result];
+    const winner = checkWinner();
+    if (winner) return scores[winner];
+
+    if (depth == 0) {
+        console.log("idk what to do! the doesn't seem to be a winner?");
+        console.log(winner);
+        // return scoreTheBoard(board) --> better for x or o?
+        // i don't think tic tac toe goes deeper than 10 lol
+        return 0;
     }
 
+    // if depth = 0 or node is a terminal node then
+    // return the heuristic value of node
+    // if (depth == 0 || winner) {
+    //     console.log("idk what to do!!", depth, winner);
+    //     return -1000;
+    // }
+
     if (isMaximizing) {
+        // if maximizingPlayer then
+        //     value := −∞
+        //     for each child of node do
+        //         value := max(value, minimax(child, depth − 1, FALSE))
+        //     return value
         let bestScore = -Infinity;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                // Is the spot available?
                 if (board[i][j] == "") {
                     board[i][j] = ai;
-                    let score = minimax(board, depth + 1, false);
+                    let currentScore = minimax(board, depth - 1, false);
                     board[i][j] = "";
-                    bestScore = max(score, bestScore);
+                    bestScore = max(bestScore, currentScore);
                 }
             }
         }
         return bestScore;
     } else {
+        // value := +∞
+        // for each child of node do
+        //     value := min(value, minimax(child, depth − 1, TRUE))
+        // return value
         let bestScore = Infinity;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
-                // Is the spot available?
                 if (board[i][j] == "") {
                     board[i][j] = human;
-                    let score = minimax(board, depth + 1, true);
+                    let currentScore = minimax(board, depth - 1, true);
                     board[i][j] = "";
-                    bestScore = min(score, bestScore);
+                    bestScore = min(bestScore, currentScore);
                 }
             }
         }
         return bestScore;
     }
+    return 1;
 }
